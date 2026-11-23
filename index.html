@@ -1,26 +1,433 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casefir</title>
-    <style>
-        body {
-            font-family: system-ui, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: #1a1a2e;
-            color: #eee;
-        }
-        h1 {
-            font-size: 3rem;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Casefir's personal site.">
+  <title>Casefir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f7f4;
+      --fg: #15161a;
+      --muted: #5b5f6b;
+      --accent: #6c4cf5;
+      --accent-2: #13b5a6;
+      --card: #ffffff;
+      --line: rgba(21, 22, 26, 0.12);
+      --display: "Space Grotesk", system-ui, sans-serif;
+      --body: "Inter", system-ui, -apple-system, sans-serif;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0d0e12;
+        --fg: #f2f2f5;
+        --muted: #9ca0ad;
+        --accent: #a592ff;
+        --accent-2: #5ee6d8;
+        --card: #171920;
+        --line: rgba(242, 242, 245, 0.12);
+        color-scheme: dark;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--body);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
+    /* Animated background */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .blob {
+      position: absolute;
+      width: 55vmax;
+      height: 55vmax;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.35;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .blob.a { background: var(--accent); top: -20%; left: -15%; }
+    .blob.b { background: var(--accent-2); bottom: -25%; right: -15%; animation-duration: 22s; animation-delay: -6s; }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(8vw, 6vh) scale(1.15); }
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+      animation: gridShift 30s linear infinite;
+    }
+    @keyframes gridShift {
+      to { background-position: 48px 48px; }
+    }
+
+    /* Flying hammers */
+    .hammers {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .hammer {
+      position: absolute;
+      left: 0;
+      top: var(--top);
+      width: var(--size);
+      height: var(--size);
+      color: var(--accent);
+      opacity: 0.3;
+      transform: translateX(-20vw) rotate(0deg);
+      animation: fly var(--dur) linear infinite;
+      animation-delay: var(--delay);
+      will-change: transform;
+    }
+    .hammer:nth-child(even) { color: var(--accent-2); }
+    .hammer svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    @keyframes fly {
+      from { transform: translateX(-20vw) rotate(0deg); }
+      to   { transform: translateX(120vw) rotate(var(--spin)); }
+    }
+
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding-block: clamp(4rem, 14vh, 9rem) 4rem;
+    }
+
+    /* Hero */
+    .eyebrow {
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      opacity: 0;
+      animation: rise 0.8s ease forwards 0.1s;
+    }
+    h1 {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: clamp(3.5rem, 13vw, 8.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    h1 span.ch {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(40px) rotate(4deg);
+      animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: calc(0.25s + var(--i) * 0.07s);
+    }
+    h1 span.grad {
+      background: linear-gradient(100deg, var(--accent), var(--accent-2), var(--accent));
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) forwards, shimmer 6s linear infinite;
+    }
+    @keyframes charIn {
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes shimmer {
+      to { background-position: -200% 0; }
+    }
+
+    .tagline {
+      font-size: clamp(1.125rem, 2.6vw, 1.4rem);
+      color: var(--muted);
+      max-width: 36ch;
+      margin: 1.5rem 0 2.25rem;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 1.1s;
+    }
+    .typed {
+      color: var(--fg);
+      font-weight: 500;
+      border-right: 2px solid var(--accent);
+      padding-right: 2px;
+      animation: blink 0.9s step-end infinite;
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      opacity: 0;
+      animation: rise 0.9s ease forwards 1.4s;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: 500;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .btn.primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff;
+    }
+    .btn:hover, .btn:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px -12px var(--accent);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    /* Sections */
+    section {
+      margin-top: clamp(4rem, 12vh, 7rem);
+    }
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      margin: 0 0 1.5rem;
+      letter-spacing: -0.02em;
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      display: block;
+      min-width: 0;
+      padding: 1.5rem;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: inherit;
+      text-decoration: none;
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .card:hover, .card:focus-visible {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      outline: none;
+    }
+    .card h3 {
+      font-family: var(--display);
+      margin: 0 0 0.4rem;
+      font-size: 1.15rem;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .card .arrow {
+      display: inline-block;
+      margin-top: 0.9rem;
+      color: var(--accent);
+      transition: transform 0.25s ease;
+    }
+    .card:hover .arrow { transform: translateX(6px); }
+
+    footer {
+      margin-top: 6rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    footer a { color: inherit; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      h1 span.ch, .eyebrow, .tagline, .actions { opacity: 1; transform: none; }
+      .reveal { opacity: 1; transform: none; }
+      .hammers { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Hello, I'm Casefir</h1>
+  <div class="bg" aria-hidden="true">
+    <div class="blob a"></div>
+    <div class="blob b"></div>
+    <div class="grid"></div>
+    <div class="hammers" id="hammers"></div>
+  </div>
+
+  <main>
+    <p class="eyebrow">Personal site</p>
+
+    <h1 aria-label="Casefir">
+      <span class="ch" style="--i:0" aria-hidden="true">C</span><span class="ch" style="--i:1" aria-hidden="true">a</span><span class="ch" style="--i:2" aria-hidden="true">s</span><span class="ch" style="--i:3" aria-hidden="true">e</span><span class="ch" style="--i:4" aria-hidden="true">f</span><span class="ch" style="--i:5" aria-hidden="true">i</span><span class="ch" style="--i:6" aria-hidden="true">r</span>
+    </h1>
+
+    <p class="tagline">
+      Hi, I'm Casefir. <span class="typed" id="typed"></span>
+    </p>
+
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/casefir" target="_blank" rel="noopener">GitHub profile</a>
+      <a class="btn" href="https://youtube.com/casefir-gh" target="_blank" rel="noopener">YouTube</a>
+      <a class="btn" href="#projects">See projects</a>
+    </div>
+
+    <section id="projects" class="reveal">
+      <h2>Projects</h2>
+      <div class="cards">
+        <a class="card" href="https://github.com/casefir?tab=repositories" target="_blank" rel="noopener">
+          <h3>Repositories</h3>
+          <p>Everything I've published on GitHub, in one place.</p>
+          <span class="arrow">&rarr;</span>
+        </a>
+        <a class="card" href="https://youtube.com/casefir-gh" target="_blank" rel="noopener">
+          <h3>YouTube</h3>
+          <p>Videos and walkthroughs on my channel.</p>
+          <span class="arrow">&rarr;</span>
+        </a>
+        <a class="card" href="https://casefir.github.io" target="_blank" rel="noopener">
+          <h3>This site</h3>
+          <p>A small animated homepage hosted on GitHub Pages.</p>
+          <span class="arrow">&rarr;</span>
+        </a>
+        <a class="card" href="https://github.com/casefir" target="_blank" rel="noopener">
+          <h3>Get in touch</h3>
+          <p>Follow along or open an issue on any of my repos.</p>
+          <span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </section>
+
+    <footer>
+      <span>&copy; <span id="year"></span> Casefir</span>
+      <span>
+        <a href="https://github.com/casefir" target="_blank" rel="noopener">GitHub</a> &middot;
+        <a href="https://youtube.com/casefir-gh" target="_blank" rel="noopener">YouTube</a>
+      </span>
+    </footer>
+  </main>
+
+  <script>
+    // Typewriter effect for the rotating lines
+    const phrases = [
+      "Building things for the web.",
+      "Tinkering with code and design.",
+      "Always learning something new."
+    ];
+    const el = document.getElementById("typed");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let p = 0, c = 0, deleting = false;
+
+    function tick() {
+      const word = phrases[p];
+      el.textContent = word.slice(0, c);
+      let delay = deleting ? 35 : 70;
+      if (!deleting && c === word.length) {
+        delay = 1800;
+        deleting = true;
+      } else if (deleting && c === 0) {
+        deleting = false;
+        p = (p + 1) % phrases.length;
+        delay = 400;
+      }
+      c += deleting ? -1 : 1;
+      setTimeout(tick, delay);
+    }
+    if (reduce) {
+      el.textContent = phrases[0];
+    } else {
+      setTimeout(tick, 1400);
+    }
+
+    // Flying hammers: each one gets its own height, speed, start offset and spin
+    const hammerSVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="12" y="8" width="40" height="16" rx="3" fill="currentColor"/><rect x="29" y="22" width="6" height="38" rx="3" fill="currentColor"/></svg>';
+    const hammerData = [
+      { top: "12%", size: "64px", dur: "16s", delay: "-2s",  spin: "540deg" },
+      { top: "28%", size: "44px", dur: "22s", delay: "-9s",  spin: "-360deg" },
+      { top: "46%", size: "78px", dur: "19s", delay: "-14s", spin: "720deg" },
+      { top: "63%", size: "52px", dur: "25s", delay: "-5s",  spin: "-540deg" },
+      { top: "80%", size: "70px", dur: "18s", delay: "-11s", spin: "450deg" },
+      { top: "92%", size: "36px", dur: "28s", delay: "-17s", spin: "360deg" }
+    ];
+    const hammersEl = document.getElementById("hammers");
+    if (!reduce) {
+      hammerData.forEach((h) => {
+        const d = document.createElement("div");
+        d.className = "hammer";
+        d.style.cssText = `--top:${h.top};--size:${h.size};--dur:${h.dur};--delay:${h.delay};--spin:${h.spin}`;
+        d.innerHTML = hammerSVG;
+        hammersEl.appendChild(d);
+      });
+    }
+
+    // Reveal sections on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".reveal").forEach((n) => io.observe(n));
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
-</html>   
+</html>
